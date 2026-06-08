@@ -5,7 +5,6 @@ const {
 } = require("@whiskeysockets/baileys");
 
 const express = require("express");
-const qrcode = require("qrcode-terminal");
 
 const app = express();
 
@@ -14,8 +13,9 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log('Server running on port ${PORT}');
+  console.log(Server running on port ${PORT});
 });
 
 async function startBot() {
@@ -23,33 +23,38 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true,
+    printQRInTerminal: false
   });
 
-if (!sock.authState?.creds?.registered) {
-    const phoneNumber = "919250875857"; // apna WhatsApp number
+  // Pairing Code
+  if (!state.creds.registered) {
+    const phoneNumber = "919250875857"; // apna number
+
     const code = await sock.requestPairingCode(phoneNumber);
+
+    console.log("================================");
     console.log("PAIRING CODE:", code);
-}
+    console.log("================================");
+  }
+
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("connection.update", (update) => {
-    const { connection, qr, lastDisconnect } = update;
-
-    if (qr) {
-      console.log("Scan this QR:");
-      qrcode.generate(qr, { small: true });
-    }
+    const { connection, lastDisconnect } = update;
 
     if (connection === "close") {
       const shouldReconnect =
         lastDisconnect?.error?.output?.statusCode !==
         DisconnectReason.loggedOut;
 
+      console.log("Connection closed");
+
       if (shouldReconnect) {
         startBot();
       }
-    } else if (connection === "open") {
+    }
+
+    if (connection === "open") {
       console.log("WhatsApp Connected!");
     }
   });
@@ -60,6 +65,7 @@ if (!sock.authState?.creds?.registered) {
     if (!msg.message || msg.key.fromMe) return;
 
     const sender = msg.key.remoteJid;
+
     const text =
       msg.message.conversation ||
       msg.message.extendedTextMessage?.text ||
