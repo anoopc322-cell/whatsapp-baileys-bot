@@ -26,6 +26,11 @@ async function startBot() {
     printQRInTerminal: true,
   });
 
+if (!sock.authState?.creds?.registered) {
+    const phoneNumber = "919250875857"; // apna WhatsApp number
+    const code = await sock.requestPairingCode(phoneNumber);
+    console.log("PAIRING CODE:", code);
+}
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("connection.update", (update) => {
