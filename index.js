@@ -23,24 +23,17 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: false
+    printQRInTerminal: false,
   });
-
-  // Pairing Code
-  if (!state.creds.registered) {
-    const phoneNumber = "919250875857"; // apna number
-
-    const code = await sock.requestPairingCode(phoneNumber);
-
-    console.log("================================");
-    console.log("PAIRING CODE:", code);
-    console.log("================================");
-  }
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", (update) => {
+  sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
+
+    if (connection === "open") {
+      console.log("WhatsApp Connected!");
+    }
 
     if (connection === "close") {
       const shouldReconnect =
@@ -52,10 +45,6 @@ async function startBot() {
       if (shouldReconnect) {
         startBot();
       }
-    }
-
-    if (connection === "open") {
-      console.log("WhatsApp Connected!");
     }
   });
 
@@ -73,10 +62,12 @@ async function startBot() {
 
     if (text.toLowerCase() === "hi") {
       await sock.sendMessage(sender, {
-        text: "Hello! I am your WhatsApp bot."
+        text: "Hello! I am your WhatsApp bot.",
       });
     }
   });
 }
 
-startBot();
+startBot().catch((err) => {
+  console.error("Bot startup error:", err);
+});
