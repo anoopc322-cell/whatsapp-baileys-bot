@@ -17,7 +17,10 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('Server running on port ${PORT}');
 });
-
+if (!state.creds.registered) {
+  const code = await sock.requestPairingCode("919250875857");
+  console.log("PAIRING CODE:", code);
+}
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth_info");
 
